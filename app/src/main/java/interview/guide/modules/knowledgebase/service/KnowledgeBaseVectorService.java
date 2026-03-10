@@ -9,6 +9,7 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,6 +27,10 @@ public class KnowledgeBaseVectorService {
      * 阿里云 DashScope Embedding API 批量大小限制
      */
     private static final int MAX_BATCH_SIZE = 10;
+    /**
+     * @see SearchRequest#DEFAULT_TOP_K
+     */
+    public static final int DEFAULT_TOP_K = 1;
     private final VectorStore vectorStore;
     private final TextSplitter textSplitter;
     private final VectorRepository vectorRepository;
@@ -92,15 +97,13 @@ public class KnowledgeBaseVectorService {
         try {
             SearchRequest.Builder builder = SearchRequest.builder()
                 .query(query)
-                .topK(Math.max(topK, 1));
+                .topK(Math.max(topK, DEFAULT_TOP_K));
 
             if (minScore > 0) {
                 builder.similarityThreshold(minScore);
             }
 
-            if (knowledgeBaseIds != null && !knowledgeBaseIds.isEmpty()) {
-                builder.filterExpression(buildKbFilterExpression(knowledgeBaseIds));
-            }
+            builder.filterExpression(buildKbFilterExpression(knowledgeBaseIds));
 
             List<Document> results = vectorStore.similaritySearch(builder.build());
             if (results == null) {
@@ -164,7 +167,11 @@ public class KnowledgeBaseVectorService {
         }
     }
 
-    private String buildKbFilterExpression(List<Long> knowledgeBaseIds) {
+    String buildKbFilterExpression(List<Long> knowledgeBaseIds) {
+        if (CollectionUtils.isEmpty(knowledgeBaseIds)) {
+            return null;
+        }
+
         String values = knowledgeBaseIds.stream()
             .filter(Objects::nonNull)
             .map(String::valueOf)

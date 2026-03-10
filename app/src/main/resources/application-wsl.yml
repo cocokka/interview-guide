@@ -1,0 +1,13 @@
+logging:
+  file:
+    path: ./logs/app.log
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+AI_BAILIAN_API_KEY: ${DASHSCOPE_API_KEY}
+
+APP_STORAGE_ACCESS_KEY: XnT9CvD30GpwUckByKaQ
+APP_STORAGE_SECRET_KEY: SHjVvsQMk1c84FUCPIzB9KLwbeuZiXWqlmtr362x
